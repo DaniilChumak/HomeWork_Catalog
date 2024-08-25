@@ -113,11 +113,12 @@ class ProductUpdateView(LoginRequiredMixin, UpdateView):
         user = self.request.user
         if user == self.object.owner:
             return ProductForm
-        if user.has_perm("catalog.can_edit_published") and user.has_perm(
-            "catalog.can_edit_description"
-        ):
+        if user.has_perms(["catalog.can_edit_publication",
+                           "catalog.can_edit_dicription",
+                           "catalog.can_edit_category"]):
             return ProductModeratorForm
-        raise PermissionDenied("Недостаточно прав для редактирования этого товара.")
+        raise PermissionDenied
+
 
 
 class ProductDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):

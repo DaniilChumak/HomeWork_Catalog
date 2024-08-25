@@ -1,124 +1,62 @@
-from django.forms import ModelForm
 from django import forms
-from django.core.exceptions import ValidationError
+from django.forms import ModelForm, BooleanField
 
-from catalog.models import Product, Version, Category
+from catalog.models import Product, Version
 
 
-class StyleFormMixin:
-
-    def add_bootstrap_classes(self):
-        for field_name, field in self.fields.items():
-            if isinstance(field.widget, forms.TextInput):
-                field.widget.attrs.update({"class": "form-control"})
-            elif isinstance(field.widget, forms.Textarea):
-                field.widget.attrs.update({"class": "form-control"})
-            elif isinstance(field.widget, forms.FileInput):
-                field.widget.attrs.update({"class": "form-control-file"})
-            elif isinstance(field.widget, forms.Select):
-                field.widget.attrs.update({"class": "form-control"})
-            elif isinstance(field.widget, forms.CheckboxInput):
-                field.widget.attrs.update({"class": "form-check-input"})
-            elif isinstance(field.widget, forms.RadioSelect):
-                field.widget.attrs.update({"class": "form-check-input"})
-
+class StyleMixin(ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.add_bootstrap_classes()
+        for field_name, field in self.fields.items():
+            if isinstance(field, BooleanField):
+                field.widget.attrs['class'] = 'form-check-input'
+            else:
+                field.widget.attrs['class'] = 'form-control'
 
 
-FORBIDDEN_WORDS = [
-    "казино",
-    "криптовалюта",
-    "крипта",
-    "биржа",
-    "дешево",
-    "бесплатно",
-    "обман",
-    "полиция",
-    "радар",
-]
-
-
-class ProductForm(StyleFormMixin, ModelForm):
+class ProductForm(StyleMixin, forms.ModelForm):
     class Meta:
         model = Product
-        fields = [
-            "name",
-            "description",
-            "image_previews",
-            "product_category",
-            "price",
-            "is_published",
-        ]
+        fields = '__all__'
 
     def clean_name(self):
-        name = self.cleaned_data.get("name")
-        if any(word in name.lower() for word in FORBIDDEN_WORDS):
-            raise ValidationError("Название продукта содержит запрещённые слова.")
-        return name
+        cleaned_data = self.cleaned_data['name']
+        bad_words = ['казино', 'криптовалюта', 'крипта', 'биржа', 'дешево', 'бесплатно', 'обман', 'полиция', 'радар']
+
+        for word in bad_words:
+            if word in cleaned_data:
+                raise forms.ValidationError(f'Недопустимое слово: {word}')
+
+        return cleaned_data
 
     def clean_description(self):
-        description = self.cleaned_data.get("description")
-        if description and any(word in description.lower() for word in FORBIDDEN_WORDS):
-            raise ValidationError("Описание продукта содержит запрещённые слова.")
-        return description
+        cleaned_data = self.cleaned_data['description']
+        bad_words = ['казино', 'криптовалюта', 'крипта', 'биржа', 'дешево', 'бесплатно', 'обман', 'полиция', 'радар']
 
-
-class ProductModeratorForm(StyleFormMixin, ModelForm):
-    class Meta:
-        model = Product
-        fields = [
-            "description",
-            "product_category",
-            "is_published",
-        ]
-
-    def clean_description(self):
-        description = self.cleaned_data.get("description")
-        if description and any(word in description.lower() for word in FORBIDDEN_WORDS):
-            raise ValidationError("Описание продукта содержит запрещённые слова.")
-        return description
-
-
-class VersionForm(StyleFormMixin, ModelForm):
-    class Meta:
-        model = Version
-        fields = ["product", "version_number", "version_name", "version_is_valid"]
-
-    def clean(self):
-
-        cleaned_data = super().clean()
-        product = cleaned_data.get("product")
-        version_is_valid = cleaned_data.get("version_is_valid")
-
-        if product and version_is_valid is not None:
-            if version_is_valid:
-                if (
-                    Version.objects.filter(product=product, version_is_valid=True)
-                    .exclude(id=self.instance.id)
-                    .exists()
-                ):
-                    raise ValidationError(
-                        "В один момент может быть только одна активная версия продукта."
-                    )
+        for word in bad_words:
+            if word in cleaned_data:
+                raise forms.ValidationError(f'Недопустимое слово: {word}')
 
         return cleaned_data
 
 
-class CategoryForm(StyleFormMixin, ModelForm):
+class ProductModeratorForm(StyleMixin, forms.ModelForm):
     class Meta:
-        model = Category
-        fields = ["name", "description"]
-
-    def clean_name(self):
-        name = self.cleaned_data.get("name")
-        if any(word in name.lower() for word in FORBIDDEN_WORDS):
-            raise ValidationError("Название категории содержит запрещённые слова.")
-        return name
+        model = Product
+        fields = ('description', 'my_category', 'is_published')
 
     def clean_description(self):
-        description = self.cleaned_data.get("description")
-        if description and any(word in description.lower() for word in FORBIDDEN_WORDS):
-            raise ValidationError("Описание категории содержит запрещённые слова.")
-        return description
+        cleaned_data = self.cleaned_data['description']
+        bad_words = ['казино', 'криптовалюта', 'крипта', 'биржа', 'дешево', 'бесплатно', 'обман', 'полиция', 'радар']
+
+        for word in bad_words:
+            if word in cleaned_data:
+                raise forms.ValidationError(f'Недопустимое слово: {word}')
+
+        return cleaned_data
+
+
+class VersionForm(StyleMixin, forms.ModelForm):
+    class Meta:
+        model = Version
+        fields = '__all__'
