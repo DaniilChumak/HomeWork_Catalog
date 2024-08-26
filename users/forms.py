@@ -1,20 +1,25 @@
-from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django import forms
-from catalog.forms import ValidationFormMixin
+from django.contrib.auth.forms import (
+    UserCreationForm,
+    PasswordResetForm,
+    UserChangeForm,
+)
+
+from catalog.forms import StyleFormMixin
 from users.models import User
 
 
-class UserRegisterForm(ValidationFormMixin, UserCreationForm):
+class UserRegisterForm(StyleFormMixin, UserCreationForm):
     class Meta:
         model = User
-        fields = ('email',)
+        fields = ("email", "password1", "password2")
 
 
-class UserProfileForm(ValidationFormMixin, UserChangeForm):
+class UserProfileForm(StyleFormMixin, UserChangeForm):
     class Meta:
         model = User
-        fields = ('first_name', 'last_name', 'nick_name', 'country', 'email', 'avatar')
+        fields = ("email", "phone", "country", "avatar")
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['password'].widget = forms.HiddenInput()
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.fields["password"].widget = forms.HiddenInput()

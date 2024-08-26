@@ -1,19 +1,20 @@
-
 from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import path
-
 from users.apps import UsersConfig
-from users.views import UserRegister, UserProfile, UserDetail, email_verification, verification, recover_password
+from users.views import (
+    UserCreateView,
+    email_verification,
+    ResetPasswordView,
+    UserProfileView,
+)
 
 app_name = UsersConfig.name
 
 urlpatterns = [
-    path("users_login/", LoginView.as_view(template_name='users/login.html'), name='users_login'),
-    path("users_logout/", LogoutView.as_view(), name='users_logout'),
-    path("users_register/", UserRegister.as_view(), name='users_register'),
-    path("user_profile/", UserDetail.as_view(), name='user_profile'),
-    path("user_edit/", UserProfile.as_view(), name='user_edit'),
-    path("email-confirm/<str:token>/", email_verification, name='email-confirm'),
-    path("verification_message/", verification, name='verification_message'),
-    path("recover_password/", recover_password, name='recover_password'),
+    path("login/", LoginView.as_view(template_name="login.html"), name="login"),
+    path("logout/", LogoutView.as_view(), name="logout"),
+    path("register/", UserCreateView.as_view(), name="register"),
+    path("email-confirm/<str:token>/", email_verification, name="email-confirm"),
+    path("reset_password/", ResetPasswordView.as_view(), name="reset_password"),
+    path("profile/", UserProfileView.as_view(), name="profile"),
 ]
